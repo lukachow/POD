@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Operation Day Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-label {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            color: #333;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .info {
+            color: #666;
+            font-size: 14px;
+            margin-top: 15px;
+            text-align: center;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Post-Operation Calculator</h1>
+        
+        <form id="calculatorForm">
+            <div class="form-group">
+                <label for="operationDate">Operation Date:</label>
+                <input 
+                    type="date" 
+                    id="operationDate" 
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="todayDate">Today's Date:</label>
+                <input 
+                    type="date" 
+                    id="todayDate" 
+                    required
+                >
+            </div>
+
+            <button type="submit">Calculate</button>
+            
+            <div class="error" id="error"></div>
+        </form>
+
+        <div class="results" id="results">
+            <div class="result-item">
+                <div class="result-label">Post-Operation Days</div>
+                <div class="result-value" id="days">-</div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-label">Weeks & Days</div>
+                <div class="result-value" id="weeksAndDays">-</div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-label">Months & Days</div>
+                <div class="result-value" id="monthsAndDays">-</div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-label">Total Weeks</div>
+                <div class="result-value" id="totalWeeks">-</div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-label">Total Months</div>
+                <div class="result-value" id="totalMonths">-</div>
+            </div>
+        </div>
+
+        <div class="info">
+            💡 Enter the date of your operation and today's date to see your recovery progress
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('calculatorForm');
+        const operationDateInput = document.getElementById('operationDate');
+        const todayDateInput = document.getElementById('todayDate');
+        const resultsDiv = document.getElementById('results');
+        const errorDiv = document.getElementById('error');
+
+        // Set today's date as default
+        const today = new Date();
+        todayDateInput.valueAsDate = today;
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            calculatePostOperationDays();
+        });
+
+        function calculatePostOperationDays() {
+            const operationDate = new Date(operationDateInput.value);
+            const todayDate = new Date(todayDateInput.value);
+
+            // Validation
+            if (!operationDateInput.value || !todayDateInput.value) {
+                showError('Please fill in both dates');
+                return;
+            }
+
+            if (operationDate > todayDate) {
+                showError('Operation date cannot be after today\'s date');
+                return;
+            }
+
+            errorDiv.classList.remove('show');
+
+            // Calculate days
+            const timeDiff = todayDate - operationDate;
+            const totalDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+            // Calculate weeks and days
+            const weeks = Math.floor(totalDays / 7);
+            const days = totalDays % 7;
+
+            // Calculate months and days
+            const months = Math.floor(totalDays / 30);
+            const remainingDays = totalDays % 30;
+
+            // Calculate total weeks
+            const totalWeeks = (totalDays / 7).toFixed(1);
+
+            // Calculate total months
+            const totalMonths = (totalDays / 30).toFixed(1);
+
+            // Display results
+            document.getElementById('days').textContent = totalDays;
+            document.getElementById('weeksAndDays').textContent = 
+                `${weeks} week${weeks !== 1 ? 's' : ''} ${days} day${days !== 1 ? 's' : ''}`;
+            document.getElementById('monthsAndDays').textContent = 
+                `${months} month${months !== 1 ? 's' : ''} ${remainingDays} day${remainingDays !== 1 ? 's' : ''}`;
+            document.getElementById('totalWeeks').textContent = totalWeeks;
+            document.getElementById('totalMonths').textContent = totalMonths;
+
+            resultsDiv.classList.add('show');
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            resultsDiv.classList.remove('show');
+        }
+
+        // Allow Enter key to submit
+        operationDateInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') form.dispatchEvent(new Event('submit'));
+        });
+        todayDateInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') form.dispatchEvent(new Event('submit'));
+        });
+    </script>
+</body>
+</html>
